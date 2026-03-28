@@ -24,7 +24,7 @@ def get_by_name(ctx: Context, uri, name):
     return next((x for x in resources if x['Name'] == name), None)
 
 @mcp.tool()
-def reset_space(ctx: Context):
+async def reset_space(ctx: Context):
     """
     Reset the Scratchpad space in the Octopus instance
     """
@@ -49,7 +49,7 @@ def reset_space(ctx: Context):
         response = requests.delete(uri, headers=headers)
         response.raise_for_status()
     except Exception as e:
-        ctx.log('warning', str(e))
+        await ctx.log('warning', str(e))
         pass
 
     # Define space JSON
@@ -65,7 +65,7 @@ def reset_space(ctx: Context):
     # Create the space
     uri = '{0}/api/spaces'.format(octopus_server_uri)
     response = requests.post(uri, headers=headers, json=space)
-    ctx.log('info', response.text)
+    await ctx.log('info', response.text)
     response.raise_for_status()
 
     # Get the space ID
@@ -117,7 +117,7 @@ def reset_space(ctx: Context):
     response = requests.put(uri, headers=headers, json=variable_set)
     response.raise_for_status()
 
-    ctx.log('info', 'Created library variable set: Easy Mode Administration')
+    await ctx.log('info', 'Created library variable set: Easy Mode Administration')
 
     # Create AWS OIDC account
     aws_oidc_account = {
@@ -144,7 +144,7 @@ def reset_space(ctx: Context):
     response = requests.post(uri, headers=headers, json=aws_oidc_account)
     response.raise_for_status()
 
-    ctx.log('info', 'Created AWS OIDC account: AWS OIDC')
+    await ctx.log('info', 'Created AWS OIDC account: AWS OIDC')
 
     # Create Azure OIDC account
     azure_oidc_account = {
@@ -167,7 +167,7 @@ def reset_space(ctx: Context):
     response = requests.post(uri, headers=headers, json=azure_oidc_account)
     response.raise_for_status()
 
-    ctx.log('info', 'Created Azure OIDC account: Azure OIDC')
+    await ctx.log('info', 'Created Azure OIDC account: Azure OIDC')
 
     # Create environments
     environments = ['Development', 'Test', 'Production']
@@ -183,12 +183,11 @@ def reset_space(ctx: Context):
         uri = '{0}/api/{1}/environments'.format(octopus_server_uri, space_id)
         response = requests.post(uri, headers=headers, json=environment)
         response.raise_for_status()
-        ctx.log('info', 'Created environment: {0}'.format(env_name))
+        await ctx.log('info', 'Created environment: {0}'.format(env_name))
 
-    ctx.log('info', space_name)
+    await ctx.log('info', space_name)
 
 
 if __name__ == "__main__":
     mcp.run()
-
 
