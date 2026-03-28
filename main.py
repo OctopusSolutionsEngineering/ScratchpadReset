@@ -2,7 +2,7 @@
 import json
 import os
 
-from mcp.server.fastmcp import FastMCP
+from mcp.server.fastmcp import Context, FastMCP
 import requests
 
 octopus_server_uri = 'https://mattc.octopus.app'
@@ -12,19 +12,19 @@ headers = {'X-Octopus-ApiKey': octopus_api_key}
 # Create an MCP server
 mcp = FastMCP("Octopus Space Reset", json_response=True)
 
-def get_octopus_resource(uri):
+def get_octopus_resource(ctx: Context, uri):
     response = requests.get(uri, headers=headers)
     response.raise_for_status()
 
     return json.loads(response.content.decode('utf-8'))
 
 
-def get_by_name(uri, name):
-    resources = get_octopus_resource(uri)
+def get_by_name(ctx: Context, uri, name):
+    resources = get_octopus_resource(ctx, uri)
     return next((x for x in resources if x['Name'] == name), None)
 
 @mcp.tool()
-def reset_space():
+def reset_space(ctx: Context):
     """
     Reset the Scratchpad space in the Octopus instance
     """
@@ -37,7 +37,7 @@ def reset_space():
     manager_team_members = []  # Either this or managers_teams must be populated otherwise you'll receive a 400
 
     try:
-        space = get_by_name('{0}/api/spaces/all'.format(octopus_server_uri), space_name)
+        space = get_by_name(ctx, '{0}/api/spaces/all'.format(octopus_server_uri), space_name)
         space['TaskQueueStopped'] = True
 
         # update task queue to stopped
@@ -49,7 +49,7 @@ def reset_space():
         response = requests.delete(uri, headers=headers)
         response.raise_for_status()
     except Exception as e:
-        print(e)
+        ctx.log('warning', str(e))
         pass
 
     # Define space JSON
@@ -65,7 +65,7 @@ def reset_space():
     # Create the space
     uri = '{0}/api/spaces'.format(octopus_server_uri)
     response = requests.post(uri, headers=headers, json=space)
-    print(response.text)
+    ctx.log('info', response.text)
     response.raise_for_status()
 
     # Get the space ID
@@ -117,7 +117,7 @@ def reset_space():
     response = requests.put(uri, headers=headers, json=variable_set)
     response.raise_for_status()
 
-    print('Created library variable set: Easy Mode Administration')
+    ctx.log('info', 'Created library variable set: Easy Mode Administration')
 
     # Create AWS OIDC account
     aws_oidc_account = {
@@ -144,7 +144,7 @@ def reset_space():
     response = requests.post(uri, headers=headers, json=aws_oidc_account)
     response.raise_for_status()
 
-    print('Created AWS OIDC account: AWS OIDC')
+    ctx.log('info', 'Created AWS OIDC account: AWS OIDC')
 
     # Create Azure OIDC account
     azure_oidc_account = {
@@ -167,7 +167,7 @@ def reset_space():
     response = requests.post(uri, headers=headers, json=azure_oidc_account)
     response.raise_for_status()
 
-    print('Created Azure OIDC account: Azure OIDC')
+    ctx.log('info', 'Created Azure OIDC account: Azure OIDC')
 
     # Create environments
     environments = ['Development', 'Test', 'Production']
@@ -183,13 +183,12 @@ def reset_space():
         uri = '{0}/api/{1}/environments'.format(octopus_server_uri, space_id)
         response = requests.post(uri, headers=headers, json=environment)
         response.raise_for_status()
-        print('Created environment: {0}'.format(env_name))
+        ctx.log('info', 'Created environment: {0}'.format(env_name))
 
-    print(space_name)
+    ctx.log('info', space_name)
 
 
 if __name__ == "__main__":
-    print("Started MCP Server")
     mcp.run()
 
 
