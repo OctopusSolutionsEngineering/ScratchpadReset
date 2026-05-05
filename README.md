@@ -1,3 +1,5 @@
+https://github.com/mcasperson/ScratchpadReset
+
 ```json
 {
   "servers": {
