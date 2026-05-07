@@ -1,4 +1,7 @@
-https://github.com/mcasperson/ScratchpadReset
+https://github.com/OctopusSolutionsEngineering/ScratchpadReset
+
+This MCP server deletes and recreates a space in Octopus Deploy. This is used to test the creation of Octopus resources 
+in a fresh environment as part of agentic workflows.
 
 ```json
 {
