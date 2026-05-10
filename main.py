@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import json
 import os
+import re
 
 from mcp.server.fastmcp import Context, FastMCP
 import requests
@@ -24,13 +25,19 @@ def get_by_name(ctx: Context, uri, name):
     return next((x for x in resources if x['Name'] == name), None)
 
 @mcp.tool()
-async def reset_space(ctx: Context):
+async def reset_space(ctx: Context, space_name: str = "Scratchpad"):
     """
-    Reset the Scratchpad space in the Octopus instance
+    Reset a Scratchpad* space in the Octopus instance.
+
+    The space name must be "Scratchpad" or "Scratchpad" followed by digits.
     """
 
+    if not re.fullmatch(r"Scratchpad(?:\d+)?", space_name):
+        raise ValueError(
+            'space_name must be "Scratchpad" or "Scratchpad" followed by digits (e.g. "Scratchpad10").'
+        )
+
     # Define working variables
-    space_name = "Scratchpad"
     space_description = "Test space"
     managers_teams = [
         "teams-managers"]  # Either this or manager_team_members must be populated otherwise you'll receive a 400
